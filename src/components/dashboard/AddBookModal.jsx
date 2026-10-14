@@ -3,6 +3,10 @@ import { useForm } from 'react-hook-form';
 import { X, PlusCircle, Book, Hash } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { dashboardService } from '../../services/dashboardService';
+import { bookService } from '../../services/bookService';
+
+const generateFallbackIsbn = () => `978-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+const getCurrentYear = () => new Date().getFullYear();
 
 export default function AddBookModal({ isOpen, onClose, onActionSuccess }) {
   const [submitting, setSubmitting] = useState(false);
@@ -23,8 +27,19 @@ export default function AddBookModal({ isOpen, onClose, onActionSuccess }) {
 
   if (!isOpen) return null;
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     setSubmitting(true);
+    await bookService.addBook({
+      title: data.title,
+      author: 'Academic Faculty / Staff',
+      category: data.category,
+      isbn: data.isbn || generateFallbackIsbn(),
+      publisher: 'University Press',
+      publishedYear: getCurrentYear(),
+      totalCopies: Number(data.copies),
+      availableCopies: Number(data.copies),
+      description: 'Acquisition cataloged via quick dashboard action.'
+    });
     dashboardService.recordNewBook({
       title: data.title,
       category: data.category,

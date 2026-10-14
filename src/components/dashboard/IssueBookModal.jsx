@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { X, BookMarked, Calendar, User, BookOpen } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { dashboardService } from '../../services/dashboardService';
+import { bookService } from '../../services/bookService';
 
 const getDefaultDueDate = () => {
   const d = new Date();
@@ -35,6 +36,20 @@ export default function IssueBookModal({ isOpen, onClose, onActionSuccess }) {
       memberName: data.memberName,
       dueDate: data.dueDate
     });
+
+    // Sync with catalog inventory if matching book found
+    const books = bookService.getAllBooks();
+    const matched = books.find(
+      (b) =>
+        b.title.toLowerCase().includes(data.bookTitle.toLowerCase().trim()) ||
+        (b.isbn && b.isbn.toLowerCase().includes(data.bookTitle.toLowerCase().trim()))
+    );
+    if (matched && matched.availableCopies > 0) {
+      bookService.updateBook(matched.id, {
+        availableCopies: matched.availableCopies - 1
+      });
+    }
+
     setSubmitting(false);
     toast.success(`Book "${data.bookTitle}" issued successfully!`);
     reset();

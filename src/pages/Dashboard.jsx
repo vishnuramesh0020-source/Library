@@ -62,11 +62,12 @@ export default function Dashboard() {
     {
       title: 'Total Books',
       value: Number(stats.totalBooks).toLocaleString(),
-      sub: 'Repository volume',
+      sub: 'View all in catalog →',
       icon: BookOpen,
       iconColor: 'text-indigo-600',
       bgColor: 'bg-indigo-50/80',
-      borderColor: 'border-indigo-100'
+      borderColor: 'border-indigo-100',
+      link: '/books'
     },
     {
       title: 'Total Members',
@@ -89,11 +90,12 @@ export default function Dashboard() {
     {
       title: 'Books Available',
       value: Number(stats.booksAvailable).toLocaleString(),
-      sub: 'Ready on shelf',
+      sub: 'Browse stock →',
       icon: CheckCircle2,
       iconColor: 'text-emerald-600',
       bgColor: 'bg-emerald-50/80',
-      borderColor: 'border-emerald-100'
+      borderColor: 'border-emerald-100',
+      link: '/books'
     },
     {
       title: 'Overdue Books',
@@ -157,6 +159,14 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <Link
+              to="/books"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 transition-all cursor-pointer"
+              title="Open Book Management Catalog"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Catalog</span>
+            </Link>
             <button
               onClick={refreshDashboard}
               className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all cursor-pointer"
@@ -195,10 +205,14 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4">
           {metricCards.map((metric, idx) => {
             const Icon = metric.icon;
+            const CardWrapper = metric.link ? Link : 'div';
             return (
-              <div
+              <CardWrapper
                 key={idx}
-                className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-indigo-200 transition-all"
+                to={metric.link}
+                className={`bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-indigo-200 transition-all ${
+                  metric.link ? 'cursor-pointer hover:-translate-y-0.5' : ''
+                }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-medium text-slate-500 leading-tight">
@@ -214,7 +228,7 @@ export default function Dashboard() {
                 <p className="text-[11px] text-slate-500 mt-0.5 truncate">
                   {metric.sub}
                 </p>
-              </div>
+              </CardWrapper>
             );
           })}
         </div>
@@ -335,7 +349,7 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Module 1 Integrated</span>
+              <span>Instant Enrollment</span>
               <span className="font-semibold text-violet-600">New Card</span>
             </div>
           </div>

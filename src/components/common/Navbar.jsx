@@ -41,6 +41,12 @@ export default function Navbar() {
                   Dashboard
                 </Link>
                 <Link
+                  to="/books"
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors"
+                >
+                  Books Catalog
+                </Link>
+                <Link
                   to="/profile"
                   className="hidden md:inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors"
                 >
