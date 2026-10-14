@@ -14,6 +14,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import BookList from './pages/BookList';
 import BookDetails from './pages/BookDetails';
 import Dashboard from './pages/Dashboard';
+import MemberList from './pages/MemberList';
+import MemberProfile from './pages/MemberProfile';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 
@@ -77,6 +79,22 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <BookDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/members"
+            element={
+              <ProtectedRoute>
+                <MemberList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/members/:id"
+            element={
+              <ProtectedRoute>
+                <MemberProfile />
               </ProtectedRoute>
             }
           />

@@ -117,10 +117,19 @@ export const dashboardService = {
 
   getStats() {
     const data = this.getData();
-    // Dynamically calculate registered members from Auth user store
-    const registeredUsers = authService.getUsers() || [];
+    // Dynamically calculate registered members from Member store & Auth user store
+    let membersCount = 10;
+    try {
+      const storedMembers = localStorage.getItem('lms_members_store');
+      if (storedMembers) {
+        membersCount = JSON.parse(storedMembers).length;
+      }
+    } catch {
+      const registeredUsers = authService.getUsers() || [];
+      membersCount = registeredUsers.length;
+    }
     const baseMembers = 1240;
-    const totalMembers = baseMembers + registeredUsers.length;
+    const totalMembers = baseMembers + membersCount;
 
     const totalBooks = data.totalBooksBase;
     const booksIssued = data.booksIssuedBase;

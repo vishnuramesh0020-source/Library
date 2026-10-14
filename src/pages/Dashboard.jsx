@@ -72,11 +72,12 @@ export default function Dashboard() {
     {
       title: 'Total Members',
       value: Number(stats.totalMembers).toLocaleString(),
-      sub: 'Enrolled borrowers',
+      sub: 'Manage directory →',
       icon: Users,
       iconColor: 'text-violet-600',
       bgColor: 'bg-violet-50/80',
-      borderColor: 'border-violet-100'
+      borderColor: 'border-violet-100',
+      link: '/members'
     },
     {
       title: 'Books Issued',
@@ -327,9 +328,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Action 4: Register Member / Quick Return */}
+          {/* Action 4: Member Directory */}
           <div
-            onClick={() => navigate('/register')}
+            onClick={() => navigate('/members')}
             className="group p-4 bg-white rounded-xl border border-slate-200/80 hover:border-violet-300 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
           >
             <div>
@@ -338,19 +339,19 @@ export default function Dashboard() {
                   <UserPlus className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-semibold text-violet-600 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                  Enroll <ChevronRight className="w-3 h-3" />
+                  Directory <ChevronRight className="w-3 h-3" />
                 </span>
               </div>
               <h3 className="text-sm font-bold text-slate-900 group-hover:text-violet-600 transition-colors">
-                Register New Member
+                Member Directory & Enrollment
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Create new reader identity card, assigning borrowing permissions.
+                View reader identity cards, manage memberships, and enroll new students.
               </p>
             </div>
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Instant Enrollment</span>
-              <span className="font-semibold text-violet-600">New Card</span>
+              <span>Full Member Directory</span>
+              <span className="font-semibold text-violet-600">Open Roster</span>
             </div>
           </div>
 
