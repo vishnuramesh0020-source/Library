@@ -77,7 +77,12 @@ export const INITIAL_LOANS = [
     dueDate: getRelativeDate(-8), // 8 days overdue
     returnDate: null,
     status: 'Overdue',
+    overdueDays: 8,
     fineAmount: 80, // ₹10 per day * 8 days
+    fineStatus: 'Unpaid',
+    paymentDate: null,
+    paymentMethod: null,
+    receiptNumber: null,
     remarks: 'Automated overdue reminder sent to student email'
   },
   {
@@ -98,7 +103,12 @@ export const INITIAL_LOANS = [
     dueDate: getRelativeDate(-4),
     returnDate: getRelativeDate(-5), // Returned on time before due
     status: 'Returned',
+    overdueDays: 0,
     fineAmount: 0,
+    fineStatus: 'Paid',
+    paymentDate: null,
+    paymentMethod: null,
+    receiptNumber: null,
     remarks: 'Returned in pristine condition'
   },
   {
@@ -119,7 +129,12 @@ export const INITIAL_LOANS = [
     dueDate: getRelativeDate(-11),
     returnDate: getRelativeDate(-6), // Returned 5 days late
     status: 'Returned',
+    overdueDays: 5,
     fineAmount: 50,
+    fineStatus: 'Paid',
+    paymentDate: getRelativeDate(-6),
+    paymentMethod: 'UPI',
+    receiptNumber: 'REC-2026-5120',
     remarks: 'Late return fine ₹50 collected via UPI'
   },
   {
@@ -140,8 +155,91 @@ export const INITIAL_LOANS = [
     dueDate: getRelativeDate(11),
     returnDate: null,
     status: 'Issued',
+    overdueDays: 0,
     fineAmount: 0,
+    fineStatus: 'Paid',
+    paymentDate: null,
+    paymentMethod: null,
+    receiptNumber: null,
     remarks: 'Literature department coursework'
+  },
+  {
+    id: 'LN-2026-807',
+    bookId: 'book-7',
+    bookTitle: 'JavaScript: The Definitive Guide',
+    bookAuthor: 'David Flanagan',
+    bookCover: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500&auto=format&fit=crop&q=80',
+    bookIsbn: '978-1491952023',
+    bookCategory: 'Computer Science',
+    memberId: 'mem-7',
+    memberName: 'David Chen',
+    membershipId: 'MEM-2025-50',
+    memberEmail: 'david.chen@mit.edu',
+    memberPhone: '+91 93678 90123',
+    memberAvatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80',
+    issueDate: getRelativeDate(-20),
+    dueDate: getRelativeDate(-6),
+    returnDate: getRelativeDate(-3), // Returned 3 days late
+    status: 'Returned',
+    overdueDays: 3,
+    fineAmount: 30,
+    fineStatus: 'Unpaid',
+    paymentDate: null,
+    paymentMethod: null,
+    receiptNumber: null,
+    remarks: 'Returned 3 days late; fine unpaid at time of drop-off'
+  },
+  {
+    id: 'LN-2026-808',
+    bookId: 'book-2',
+    bookTitle: 'Designing Data-Intensive Applications',
+    bookAuthor: 'Martin Kleppmann',
+    bookCover: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500&auto=format&fit=crop&q=80',
+    bookIsbn: '978-1449373320',
+    bookCategory: 'Computer Science',
+    memberId: 'mem-6',
+    memberName: 'Priyanka Sharma',
+    membershipId: 'RES-2025-09',
+    memberEmail: 'priyanka.sharma@research.in',
+    memberPhone: '+91 94567 89012',
+    memberAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
+    issueDate: getRelativeDate(-26),
+    dueDate: getRelativeDate(-12), // 12 days overdue
+    returnDate: null,
+    status: 'Overdue',
+    overdueDays: 12,
+    fineAmount: 120, // 12 * 10
+    fineStatus: 'Unpaid',
+    paymentDate: null,
+    paymentMethod: null,
+    receiptNumber: null,
+    remarks: 'Reminder sent; borrower requested research extension'
+  },
+  {
+    id: 'LN-2026-809',
+    bookId: 'book-8',
+    bookTitle: 'The Great Gatsby',
+    bookAuthor: 'F. Scott Fitzgerald',
+    bookCover: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500&auto=format&fit=crop&q=80',
+    bookIsbn: '978-0743273565',
+    bookCategory: 'Literature & Fiction',
+    memberId: 'mem-8',
+    memberName: 'Ananya Deshmukh',
+    membershipId: 'MEM-2025-88',
+    memberEmail: 'ananya.d@iitb.ac.in',
+    memberPhone: '+91 92567 89012',
+    memberAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80',
+    issueDate: getRelativeDate(-18),
+    dueDate: getRelativeDate(-4),
+    returnDate: getRelativeDate(-1), // Returned 3 days late
+    status: 'Returned',
+    overdueDays: 3,
+    fineAmount: 30,
+    fineStatus: 'Paid',
+    paymentDate: getRelativeDate(-1),
+    paymentMethod: 'Cash',
+    receiptNumber: 'REC-2026-7840',
+    remarks: 'Settled at front circulation desk'
   }
 ];
 
@@ -182,15 +280,28 @@ export const loanService = {
           const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
           const fine = diffDays * 10; // ₹10 per overdue day
 
-          if (loan.status !== 'Overdue' || loan.fineAmount !== fine) {
+          if (
+            loan.status !== 'Overdue' ||
+            loan.fineAmount !== fine ||
+            loan.overdueDays !== diffDays ||
+            !loan.fineStatus
+          ) {
             hasChanges = true;
             return {
               ...loan,
               status: 'Overdue',
-              fineAmount: fine
+              overdueDays: diffDays,
+              fineAmount: fine,
+              fineStatus: loan.fineStatus || 'Unpaid'
             };
           }
         }
+      } else if (loan.fineAmount > 0 && !loan.fineStatus) {
+        hasChanges = true;
+        return {
+          ...loan,
+          fineStatus: 'Paid'
+        };
       }
       return loan;
     });
@@ -363,15 +474,21 @@ export const loanService = {
       fine = diffDays * 10; // ₹10 per day overdue
     }
 
+    const overdueDays = isLate
+      ? Math.max(1, Math.ceil((new Date(actualReturnDate) - new Date(loan.dueDate)) / (1000 * 60 * 60 * 24)))
+      : 0;
+
     const updatedLoan = {
       ...loan,
       returnDate: actualReturnDate,
       status: 'Returned',
+      overdueDays,
       fineAmount: fine,
+      fineStatus: fine > 0 ? (loan.fineStatus || 'Unpaid') : 'Paid',
       remarks: returnRemarks.trim()
         ? `${loan.remarks} | Return notes: ${returnRemarks.trim()}`
         : isLate
-        ? `Returned ${Math.ceil((new Date(actualReturnDate) - new Date(loan.dueDate)) / (1000 * 60 * 60 * 24))} days late. Fine: ₹${fine}`
+        ? `Returned ${overdueDays} days late. Fine: ₹${fine}`
         : 'Returned on-time in good condition'
     };
 
@@ -431,6 +548,21 @@ export const loanService = {
         ? `Book returned successfully. Overdue fine assessed: ₹${fine}.`
         : `Book "${loan.bookTitle}" returned on-time. Shelf availability updated!`
     };
+  },
+
+  // Update specific loan record (e.g. fineStatus, payment details)
+  updateLoan(loanId, updates) {
+    const loans = this.getAllLoans();
+    const index = loans.findIndex((l) => String(l.id) === String(loanId));
+    if (index === -1) {
+      return { success: false, message: 'Loan transaction record not found.' };
+    }
+    loans[index] = {
+      ...loans[index],
+      ...updates
+    };
+    this.saveLoans(loans);
+    return { success: true, loan: loans[index] };
   },
 
   // Calculate summary statistics

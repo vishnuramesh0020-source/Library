@@ -393,7 +393,11 @@ export default function MemberProfile() {
                           <h4 className="text-xs font-bold text-slate-900 truncate">{loan.bookTitle}</h4>
                           <p className="text-[11px] text-slate-500 truncate">{loan.bookAuthor}</p>
                           <p className="text-[10px] font-mono text-slate-400 mt-0.5">
-                            Due: <strong className={loan.status === 'Overdue' ? 'text-rose-600' : 'text-slate-700'}>{loan.dueDate}</strong> • Ref: {loan.id}
+                            Due: <strong className={loan.status === 'Overdue' ? 'text-rose-600' : 'text-slate-700'}>{loan.dueDate}</strong>
+                            {loan.status === 'Overdue' && (
+                              <span className="text-rose-600 font-bold ml-1.5">• Fine: ₹{loan.fineAmount}</span>
+                            )}
+                            {' '}• Ref: {loan.id}
                           </p>
                         </div>
                       </div>

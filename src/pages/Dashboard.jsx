@@ -121,11 +121,12 @@ export default function Dashboard() {
     {
       title: 'Fine Collected',
       value: `₹${stats.fineCollected}`,
-      sub: 'Dummy data',
+      sub: 'View fine ledger →',
       icon: IndianRupee,
       iconColor: 'text-teal-600',
       bgColor: 'bg-teal-50/80',
-      borderColor: 'border-teal-100'
+      borderColor: 'border-teal-100',
+      link: '/fines'
     }
   ];
 
@@ -303,9 +304,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Action 3: Collect Fine */}
+          {/* Action 3: Fine Management */}
           <div
-            onClick={() => setIsFineModalOpen(true)}
+            onClick={() => navigate('/fines')}
             className="group p-4 bg-white rounded-xl border border-slate-200/80 hover:border-amber-300 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
           >
             <div>
@@ -318,7 +319,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <h3 className="text-sm font-bold text-slate-900 group-hover:text-amber-600 transition-colors">
-                Collect Overdue Fine
+                Fine & Penalty Ledger
               </h3>
               <p className="text-xs text-slate-500 mt-1">
                 Receive overdue payments, resolve penalties, and issue receipts.
@@ -326,7 +327,7 @@ export default function Dashboard() {
             </div>
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
               <span>Resolves overdue status</span>
-              <span className="font-semibold text-amber-600">Record Fee</span>
+              <span className="font-semibold text-amber-600">Open Ledger</span>
             </div>
           </div>
 

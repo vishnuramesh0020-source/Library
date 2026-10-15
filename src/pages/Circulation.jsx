@@ -218,7 +218,10 @@ export default function Circulation() {
         </div>
 
         {/* Metric 4: Total Fines Collected */}
-        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div
+          onClick={() => navigate('/fines')}
+          className="p-4 bg-white rounded-2xl border border-slate-200/80 hover:border-amber-300 hover:shadow-xs transition-all cursor-pointer shadow-2xs"
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-slate-500">Total Fines Assessed</span>
             <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
@@ -226,7 +229,7 @@ export default function Circulation() {
             </div>
           </div>
           <p className="text-2xl font-extrabold text-slate-900 tracking-tight">₹{stats.totalFines}</p>
-          <p className="text-[11px] text-slate-500 font-medium mt-0.5">Overdue penalty ledger</p>
+          <p className="text-[11px] text-amber-600 font-medium mt-0.5">Manage fines & ledger →</p>
         </div>
 
       </div>
