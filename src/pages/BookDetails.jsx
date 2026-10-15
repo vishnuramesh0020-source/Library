@@ -16,9 +16,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { bookService } from '../services/bookService';
-import { dashboardService } from '../services/dashboardService';
 import BookModal from '../components/books/BookModal';
 import DeleteConfirmModal from '../components/books/DeleteConfirmModal';
+import IssueModal from '../components/loans/IssueModal';
 
 export default function BookDetails() {
   const { id } = useParams();
@@ -28,8 +28,8 @@ export default function BookDetails() {
   const [relatedBooks, setRelatedBooks] = useState([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isBorrowing, setIsBorrowing] = useState(false);
 
   useEffect(() => {
     const found = bookService.getBookById(id);
@@ -69,28 +69,13 @@ export default function BookDetails() {
   const isAvailable = book.availableCopies > 0;
   const stockPercentage = Math.round((book.availableCopies / (book.totalCopies || 1)) * 100);
 
-  // Quick Loan / Issue Handler
-  const handleIssueBook = async () => {
+  // Open Issue Modal with preselected book
+  const handleIssueBook = () => {
     if (!isAvailable) {
       toast.error('No copies currently available to borrow.');
       return;
     }
-
-    setIsBorrowing(true);
-    const updated = await bookService.updateBook(book.id, {
-      availableCopies: book.availableCopies - 1
-    });
-    setIsBorrowing(false);
-
-    if (updated.success) {
-      setBook(updated.book);
-      dashboardService.recordIssueBook({
-        bookTitle: book.title,
-        memberName: 'Current Session User',
-        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      });
-      toast.success(`You have successfully checked out "${book.title}"! Due in 14 days.`);
-    }
+    setIsIssueModalOpen(true);
   };
 
   // Delete Book
@@ -210,11 +195,11 @@ export default function BookDetails() {
               {/* Borrow Action Button */}
               <button
                 onClick={handleIssueBook}
-                disabled={!isAvailable || isBorrowing}
+                disabled={!isAvailable}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
               >
                 <BookMarked className="w-4 h-4" />
-                <span>{isBorrowing ? 'Processing Loan...' : isAvailable ? 'Issue / Check Out This Copy' : 'Fully Reserved'}</span>
+                <span>{isAvailable ? 'Issue / Loan This Copy' : 'Fully Reserved (0 Available)'}</span>
               </button>
             </div>
           </div>
@@ -373,6 +358,17 @@ export default function BookDetails() {
         onConfirm={handleConfirmDelete}
         bookTitle={book.title}
         isDeleting={isDeleting}
+      />
+
+      {/* Circulation Issue Modal */}
+      <IssueModal
+        isOpen={isIssueModalOpen}
+        onClose={() => setIsIssueModalOpen(false)}
+        preselectedBookId={book.id}
+        onSuccess={() => {
+          const fresh = bookService.getBookById(id);
+          setBook(fresh);
+        }}
       />
 
     </div>

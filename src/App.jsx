@@ -16,6 +16,7 @@ import BookDetails from './pages/BookDetails';
 import Dashboard from './pages/Dashboard';
 import MemberList from './pages/MemberList';
 import MemberProfile from './pages/MemberProfile';
+import Circulation from './pages/Circulation';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 
@@ -95,6 +96,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <MemberProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/circulation"
+            element={
+              <ProtectedRoute>
+                <Circulation />
               </ProtectedRoute>
             }
           />

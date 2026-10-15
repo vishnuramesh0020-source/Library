@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { dashboardService } from '../services/dashboardService';
-import IssueBookModal from '../components/dashboard/IssueBookModal';
+import IssueModal from '../components/loans/IssueModal';
 import AddBookModal from '../components/dashboard/AddBookModal';
 import CollectFineModal from '../components/dashboard/CollectFineModal';
 
@@ -82,11 +82,12 @@ export default function Dashboard() {
     {
       title: 'Books Issued',
       value: Number(stats.booksIssued).toLocaleString(),
-      sub: 'Active loans',
+      sub: 'View active loans →',
       icon: BookMarked,
       iconColor: 'text-blue-600',
       bgColor: 'bg-blue-50/80',
-      borderColor: 'border-blue-100'
+      borderColor: 'border-blue-100',
+      link: '/circulation?filter=issued'
     },
     {
       title: 'Books Available',
@@ -101,11 +102,12 @@ export default function Dashboard() {
     {
       title: 'Overdue Books',
       value: Number(stats.overdueBooks).toLocaleString(),
-      sub: 'Action required',
+      sub: 'Review penalties →',
       icon: AlertTriangle,
       iconColor: 'text-rose-600',
       bgColor: 'bg-rose-50/80',
-      borderColor: 'border-rose-100'
+      borderColor: 'border-rose-100',
+      link: '/circulation?filter=overdue'
     },
     {
       title: 'Total Categories',
@@ -564,10 +566,10 @@ export default function Dashboard() {
       </div>
 
       {/* Interactive Action Modals */}
-      <IssueBookModal
+      <IssueModal
         isOpen={isIssueModalOpen}
         onClose={() => setIsIssueModalOpen(false)}
-        onActionSuccess={refreshDashboard}
+        onSuccess={refreshDashboard}
       />
       <AddBookModal
         isOpen={isAddBookModalOpen}

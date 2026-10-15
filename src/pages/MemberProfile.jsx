@@ -11,26 +11,48 @@ import {
   Edit2,
   Trash2,
   BookOpen,
+  BookMarked,
   ShieldCheck
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { memberService } from '../services/memberService';
+import { loanService } from '../services/loanService';
 import MemberModal from '../components/members/MemberModal';
 import MemberDeleteModal from '../components/members/MemberDeleteModal';
+import IssueModal from '../components/loans/IssueModal';
+import ReturnModal from '../components/loans/ReturnModal';
 
 export default function MemberProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [member, setMember] = useState(() => memberService.getMemberById(id));
+  const [memberLoans, setMemberLoans] = useState(() => {
+    const m = memberService.getMemberById(id);
+    return m ? loanService.getActiveLoansByMember(m.id) : [];
+  });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [selectedLoanToReturn, setSelectedLoanToReturn] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const found = memberService.getMemberById(id);
     setMember(found);
+    if (found) {
+      setMemberLoans(loanService.getActiveLoansByMember(found.id));
+    }
   }, [id]);
+
+  const refreshMemberData = () => {
+    const found = memberService.getMemberById(id);
+    setMember(found);
+    if (found) {
+      setMemberLoans(loanService.getActiveLoansByMember(found.id));
+    }
+  };
 
   if (!member) {
     return (
@@ -195,13 +217,22 @@ export default function MemberProfile() {
               </div>
             </div>
 
-            <Link
-              to="/books"
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs transition-all cursor-pointer"
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>Browse Catalog to Issue Book</span>
-            </Link>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={() => setIsIssueModalOpen(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-all cursor-pointer"
+              >
+                <BookMarked className="w-3.5 h-3.5" />
+                <span>Issue Book</span>
+              </button>
+              <Link
+                to="/books"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all cursor-pointer"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Catalog</span>
+              </Link>
+            </div>
           </div>
 
         </div>
@@ -327,6 +358,74 @@ export default function MemberProfile() {
               </p>
             </div>
 
+            {/* Active Book Loans for this Member */}
+            <div className="pt-4 border-t border-slate-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <BookMarked className="w-4 h-4 text-blue-600" />
+                  Active Book Loans ({memberLoans.length})
+                </h3>
+                <Link
+                  to="/circulation"
+                  className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline font-semibold"
+                >
+                  Circulation Desk →
+                </Link>
+              </div>
+
+              {memberLoans.length > 0 ? (
+                <div className="space-y-2">
+                  {memberLoans.map((loan) => (
+                    <div
+                      key={loan.id}
+                      className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3 hover:border-slate-300 transition-all"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img
+                          src={loan.bookCover}
+                          alt={loan.bookTitle}
+                          className="w-10 h-14 object-cover rounded-md border border-slate-200 shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=100';
+                          }}
+                        />
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-bold text-slate-900 truncate">{loan.bookTitle}</h4>
+                          <p className="text-[11px] text-slate-500 truncate">{loan.bookAuthor}</p>
+                          <p className="text-[10px] font-mono text-slate-400 mt-0.5">
+                            Due: <strong className={loan.status === 'Overdue' ? 'text-rose-600' : 'text-slate-700'}>{loan.dueDate}</strong> • Ref: {loan.id}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                            loan.status === 'Overdue'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
+                          }`}
+                        >
+                          {loan.status}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedLoanToReturn(loan);
+                            setIsReturnModalOpen(true);
+                          }}
+                          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors cursor-pointer"
+                        >
+                          Return
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">No active monographs currently on loan to this reader.</p>
+              )}
+            </div>
+
           </div>
 
         </div>
@@ -337,7 +436,10 @@ export default function MemberProfile() {
       <MemberModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        onSuccess={(updated) => setMember(updated)}
+        onSuccess={(updated) => {
+          setMember(updated);
+          refreshMemberData();
+        }}
         initialMember={member}
         mode="edit"
       />
@@ -350,6 +452,25 @@ export default function MemberProfile() {
         memberName={member.name}
         membershipId={member.membershipId}
         isDeleting={isDeleting}
+      />
+
+      {/* Issue Modal for this Member */}
+      <IssueModal
+        isOpen={isIssueModalOpen}
+        onClose={() => setIsIssueModalOpen(false)}
+        preselectedMemberId={member.id}
+        onSuccess={refreshMemberData}
+      />
+
+      {/* Return Modal for Member's Loan */}
+      <ReturnModal
+        isOpen={isReturnModalOpen}
+        onClose={() => {
+          setIsReturnModalOpen(false);
+          setSelectedLoanToReturn(null);
+        }}
+        loan={selectedLoanToReturn}
+        onSuccess={refreshMemberData}
       />
 
     </div>
