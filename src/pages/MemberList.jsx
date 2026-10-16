@@ -142,7 +142,8 @@ export default function MemberList() {
   // Fetch members from Third-Party API on initial mount if empty or non-API
   useEffect(() => {
     const loadMembers = async () => {
-      if (members.length === 0 || !members.every((m) => m.apiId !== undefined)) {
+      const currentMembers = memberService.getAllMembers();
+      if (currentMembers.length === 0 || !currentMembers.every((m) => m.apiId !== undefined)) {
         setLoading(true);
         setError(null);
         const res = await memberService.fetchMembersFromApi(20);

@@ -157,7 +157,8 @@ export default function BookList() {
   // Fetch books from Open Library Books API on initial mount if empty or non-API
   useEffect(() => {
     const loadBooks = async () => {
-      if (books.length === 0 || !books.every((b) => b.apiId && String(b.apiId).includes('/works/'))) {
+      const currentBooks = bookService.getAllBooks();
+      if (currentBooks.length === 0 || !currentBooks.every((b) => b.apiId && String(b.apiId).includes('/works/'))) {
         setLoading(true);
         setError(null);
         const res = await bookService.fetchBooksFromApi(25);

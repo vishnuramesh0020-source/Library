@@ -115,6 +115,12 @@ export default function Navbar() {
                   Fines
                 </Link>
                 <Link
+                  to="/reports"
+                  className="inline-flex items-center px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors"
+                >
+                  Reports
+                </Link>
+                <Link
                   to="/profile"
                   className="hidden 2xl:inline-flex items-center px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors"
                 >

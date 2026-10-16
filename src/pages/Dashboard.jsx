@@ -17,15 +17,18 @@ import {
   Database,
   ChevronRight,
   LogOut,
-  RefreshCw
+  RefreshCw,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { dashboardService } from '../services/dashboardService';
 import { bookService } from '../services/bookService';
 import { memberService } from '../services/memberService';
+import { reportService } from '../services/reportService';
 import IssueModal from '../components/loans/IssueModal';
 import AddBookModal from '../components/dashboard/AddBookModal';
 import CollectFineModal from '../components/dashboard/CollectFineModal';
+import MonthlyTrendChart from '../components/reports/MonthlyTrendChart';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -35,6 +38,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState(() => dashboardService.getStats());
   const [activities, setActivities] = useState(() => dashboardService.getActivities());
   const [categories, setCategories] = useState(() => dashboardService.getCategories());
+  const [chartData, setChartData] = useState(() => reportService.getDashboardChartsData());
+  const [trendTimeRange, setTrendTimeRange] = useState('12m');
   const [activityFilter, setActivityFilter] = useState('all');
   const [showRawStorage, setShowRawStorage] = useState(false);
 
@@ -48,6 +53,7 @@ export default function Dashboard() {
     setStats(dashboardService.getStats());
     setActivities(dashboardService.getActivities());
     setCategories(dashboardService.getCategories());
+    setChartData(reportService.getDashboardChartsData());
   };
 
   // Ensure API data is ready and dashboard metrics are synchronized on mount
@@ -194,6 +200,14 @@ export default function Dashboard() {
             >
               <BookOpen className="w-3.5 h-3.5" />
               <span>Catalog</span>
+            </Link>
+            <Link
+              to="/reports"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 transition-all cursor-pointer"
+              title="Open Library Reports & Analytics"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>Reports</span>
             </Link>
             <button
               onClick={refreshDashboard}
@@ -383,6 +397,29 @@ export default function Dashboard() {
           </div>
 
         </div>
+      </section>
+
+      {/* Monthly Circulation Trend Chart (Dashboard Charts) */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-indigo-600" />
+            Circulation Telemetry & Trend Visuals
+          </h2>
+          <Link
+            to="/reports"
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1"
+          >
+            <span>Open Comprehensive Reports</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <MonthlyTrendChart
+          data={chartData.monthlyTrend}
+          timeRange={trendTimeRange}
+          onTimeRangeChange={setTrendTimeRange}
+        />
       </section>
 
       {/* Main Two-Column Layout: Recent Activities & Categories Breakdown */}

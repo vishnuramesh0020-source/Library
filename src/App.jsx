@@ -25,6 +25,7 @@ import MemberList from './pages/MemberList';
 import MemberProfile from './pages/MemberProfile';
 import Circulation from './pages/Circulation';
 import Fines from './pages/Fines';
+import Reports from './pages/Reports';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 
@@ -154,6 +155,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <Fines />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <Reports />
               </ProtectedRoute>
             }
           />

@@ -22,7 +22,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
 
   const [query, setQuery] = useState('');
   const [searchScope, setSearchScope] = useState('all'); // 'all' | 'title' | 'author' | 'isbn' | 'category'
-  const [books, setBooks] = useState([]);
+  const [books, setBooks] = useState(() => bookService.getAllBooks());
   const [recentSearches, setRecentSearches] = useState([]);
 
   // Load books and recent searches on modal open
