@@ -62,10 +62,31 @@ export default function IssueModal({
   // Load active books & members on open
   useEffect(() => {
     if (isOpen) {
-      const allBooks = bookService.getAllBooks();
-      const allMembers = memberService.getAllMembers();
+      let allBooks = bookService.getAllBooks();
+      let allMembers = memberService.getAllMembers();
       setBooks(allBooks);
       setMembers(allMembers);
+
+      if (
+        !allBooks ||
+        allBooks.length === 0 ||
+        !allBooks.every((b) => b.apiId && String(b.apiId).includes('/works/')) ||
+        !allMembers ||
+        allMembers.length === 0 ||
+        !allMembers.every((m) => m.apiId !== undefined)
+      ) {
+        Promise.all([
+          (!allBooks || allBooks.length === 0 || !allBooks.every((b) => b.apiId && String(b.apiId).includes('/works/')))
+            ? bookService.fetchBooksFromApi(25)
+            : Promise.resolve(),
+          (!allMembers || allMembers.length === 0 || !allMembers.every((m) => m.apiId !== undefined))
+            ? memberService.fetchMembersFromApi(20)
+            : Promise.resolve()
+        ]).then(() => {
+          setBooks(bookService.getAllBooks());
+          setMembers(memberService.getAllMembers());
+        });
+      }
 
       if (preselectedBookId) {
         setValue('bookId', String(preselectedBookId));

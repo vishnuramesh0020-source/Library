@@ -14,6 +14,8 @@ import {
   IndianRupee
 } from 'lucide-react';
 import { loanService } from '../services/loanService';
+import { bookService } from '../services/bookService';
+import { memberService } from '../services/memberService';
 import IssueModal from '../components/loans/IssueModal';
 import ReturnModal from '../components/loans/ReturnModal';
 import LoanReceiptModal from '../components/loans/LoanReceiptModal';
@@ -24,6 +26,28 @@ export default function Circulation() {
 
   const [loans, setLoans] = useState(() => loanService.getAllLoans());
   const [stats, setStats] = useState(() => loanService.getStats());
+
+  // Ensure API books and members are loaded on mount and sync circulation loans
+  useEffect(() => {
+    const initCirculation = async () => {
+      let needsRefresh = false;
+      const books = bookService.getAllBooks();
+      if (!books || books.length === 0 || !books.every((b) => b.apiId && String(b.apiId).includes('/works/'))) {
+        await bookService.fetchBooksFromApi(25);
+        needsRefresh = true;
+      }
+      const members = memberService.getAllMembers();
+      if (!members || members.length === 0 || !members.every((m) => m.apiId !== undefined)) {
+        await memberService.fetchMembersFromApi(20);
+        needsRefresh = true;
+      }
+      if (needsRefresh) {
+        setLoans(loanService.getAllLoans());
+        setStats(loanService.getStats());
+      }
+    };
+    initCirculation();
+  }, []);
 
   // Search, Filter, Sort state
   const [searchTerm, setSearchTerm] = useState('');

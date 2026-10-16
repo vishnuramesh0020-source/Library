@@ -25,6 +25,7 @@ export default function BookDetails() {
   const navigate = useNavigate();
 
   const [book, setBook] = useState(() => bookService.getBookById(id));
+  const [loading, setLoading] = useState(false);
   const [relatedBooks, setRelatedBooks] = useState([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -32,18 +33,36 @@ export default function BookDetails() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const found = bookService.getBookById(id);
-    setBook(found);
+    const loadBook = async () => {
+      let found = bookService.getBookById(id);
+      if (!found) {
+        setLoading(true);
+        await bookService.fetchBooksFromApi(25);
+        found = bookService.getBookById(id);
+        setLoading(false);
+      }
+      setBook(found);
 
-    if (found) {
-      // Find related titles by category excluding current book
-      const all = bookService.getAllBooks();
-      const related = all
-        .filter((b) => b.category === found.category && String(b.id) !== String(found.id))
-        .slice(0, 4);
-      setRelatedBooks(related);
-    }
+      if (found) {
+        // Find related titles by category excluding current book
+        const all = bookService.getAllBooks();
+        const related = all
+          .filter((b) => b.category === found.category && String(b.id) !== String(found.id))
+          .slice(0, 4);
+        setRelatedBooks(related);
+      }
+    };
+    loadBook();
   }, [id]);
+
+  if (loading) {
+    return (
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-24 text-center space-y-4">
+        <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-600 border-t-transparent"></div>
+        <p className="text-sm font-semibold text-slate-600">Retrieving book volume from repository API...</p>
+      </div>
+    );
+  }
 
   if (!book) {
     return (

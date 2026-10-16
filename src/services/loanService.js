@@ -16,247 +16,249 @@ const getRelativeDate = (offsetDays) => {
   return formatDate(d);
 };
 
-export const INITIAL_LOANS = [
-  {
-    id: 'LN-2026-801',
-    bookId: 'book-1',
-    bookTitle: 'Clean Architecture: A Craftsman\'s Guide to Software Structure',
-    bookAuthor: 'Robert C. Martin',
-    bookCover: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&auto=format&fit=crop&q=80',
-    bookIsbn: '978-0134494166',
-    bookCategory: 'Computer Science',
-    memberId: 'mem-2',
-    memberName: 'Alex Rivera',
-    membershipId: 'MEM-2025-42',
-    memberEmail: 'student@library.com',
-    memberPhone: '+91 98123 45678',
-    memberAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
-    issueDate: getRelativeDate(-5),
-    dueDate: getRelativeDate(9),
-    returnDate: null,
-    status: 'Issued', // 'Issued' | 'Returned' | 'Overdue'
-    fineAmount: 0,
-    remarks: 'Standard 14-day academic loan'
-  },
-  {
-    id: 'LN-2026-802',
-    bookId: 'book-2',
-    bookTitle: 'Designing Data-Intensive Applications',
-    bookAuthor: 'Martin Kleppmann',
-    bookCover: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500&auto=format&fit=crop&q=80',
-    bookIsbn: '978-1449373320',
-    bookCategory: 'Computer Science',
-    memberId: 'mem-1',
-    memberName: 'Sarah Jenkins',
-    membershipId: 'LIB-2025-01',
-    memberEmail: 'librarian@library.com',
-    memberPhone: '+91 98765 43210',
-    memberAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
-    issueDate: getRelativeDate(-8),
-    dueDate: getRelativeDate(6),
-    returnDate: null,
-    status: 'Issued',
-    fineAmount: 0,
-    remarks: 'Faculty research circulation'
-  },
-  {
-    id: 'LN-2026-803',
-    bookId: 'book-4',
-    bookTitle: 'Introduction to Algorithms (CLRS)',
-    bookAuthor: 'Thomas H. Cormen & Charles E. Leiserson',
-    bookCover: 'https://images.unsplash.com/photo-1509266272358-7701da638078?w=500&auto=format&fit=crop&q=80',
-    bookIsbn: '978-0262046305',
-    bookCategory: 'Mathematics & Logic',
-    memberId: 'mem-5',
-    memberName: 'Marcus Vance',
-    membershipId: 'MEM-2025-77',
-    memberEmail: 'marcus.v@polytechnic.edu',
-    memberPhone: '+91 95456 78901',
-    memberAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
-    issueDate: getRelativeDate(-22),
-    dueDate: getRelativeDate(-8), // 8 days overdue
-    returnDate: null,
-    status: 'Overdue',
-    overdueDays: 8,
-    fineAmount: 80, // ₹10 per day * 8 days
-    fineStatus: 'Unpaid',
-    paymentDate: null,
-    paymentMethod: null,
-    receiptNumber: null,
-    remarks: 'Automated overdue reminder sent to student email'
-  },
-  {
-    id: 'LN-2026-804',
-    bookId: 'book-3',
-    bookTitle: 'The Pragmatic Programmer: Your Journey to Mastery',
-    bookAuthor: 'David Thomas & Andrew Hunt',
-    bookCover: 'https://images.unsplash.com/photo-1532012164546-f432f2e3edd4?w=500&auto=format&fit=crop&q=80',
-    bookIsbn: '978-0135957059',
-    bookCategory: 'Computer Science',
-    memberId: 'mem-3',
-    memberName: 'Dr. Arthur Pendelton',
-    membershipId: 'FAC-2024-18',
-    memberEmail: 'arthur.p@university.edu',
-    memberPhone: '+91 97234 56789',
-    memberAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
-    issueDate: getRelativeDate(-18),
-    dueDate: getRelativeDate(-4),
-    returnDate: getRelativeDate(-5), // Returned on time before due
-    status: 'Returned',
-    overdueDays: 0,
-    fineAmount: 0,
-    fineStatus: 'Paid',
-    paymentDate: null,
-    paymentMethod: null,
-    receiptNumber: null,
-    remarks: 'Returned in pristine condition'
-  },
-  {
-    id: 'LN-2026-805',
-    bookId: 'book-5',
-    bookTitle: '1984',
-    bookAuthor: 'George Orwell',
-    bookCover: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=500&auto=format&fit=crop&q=80',
-    bookIsbn: '978-0451524935',
-    bookCategory: 'Literature & Fiction',
-    memberId: 'mem-4',
-    memberName: 'Elena Rostova',
-    membershipId: 'MEM-2025-104',
-    memberEmail: 'elena.rostova@academics.org',
-    memberPhone: '+91 96345 67890',
-    memberAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-    issueDate: getRelativeDate(-25),
-    dueDate: getRelativeDate(-11),
-    returnDate: getRelativeDate(-6), // Returned 5 days late
-    status: 'Returned',
-    overdueDays: 5,
-    fineAmount: 50,
-    fineStatus: 'Paid',
-    paymentDate: getRelativeDate(-6),
-    paymentMethod: 'UPI',
-    receiptNumber: 'REC-2026-5120',
-    remarks: 'Late return fine ₹50 collected via UPI'
-  },
-  {
-    id: 'LN-2026-806',
-    bookId: 'book-6',
-    bookTitle: 'To Kill a Mockingbird',
-    bookAuthor: 'Harper Lee',
-    bookCover: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=500&auto=format&fit=crop&q=80',
-    bookIsbn: '978-0060935467',
-    bookCategory: 'Literature & Fiction',
-    memberId: 'mem-6',
-    memberName: 'Priyanka Sharma',
-    membershipId: 'RES-2025-09',
-    memberEmail: 'priyanka.sharma@research.in',
-    memberPhone: '+91 94567 89012',
-    memberAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
-    issueDate: getRelativeDate(-3),
-    dueDate: getRelativeDate(11),
-    returnDate: null,
-    status: 'Issued',
-    overdueDays: 0,
-    fineAmount: 0,
-    fineStatus: 'Paid',
-    paymentDate: null,
-    paymentMethod: null,
-    receiptNumber: null,
-    remarks: 'Literature department coursework'
-  },
-  {
-    id: 'LN-2026-807',
-    bookId: 'book-7',
-    bookTitle: 'JavaScript: The Definitive Guide',
-    bookAuthor: 'David Flanagan',
-    bookCover: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500&auto=format&fit=crop&q=80',
-    bookIsbn: '978-1491952023',
-    bookCategory: 'Computer Science',
-    memberId: 'mem-7',
-    memberName: 'David Chen',
-    membershipId: 'MEM-2025-50',
-    memberEmail: 'david.chen@mit.edu',
-    memberPhone: '+91 93678 90123',
-    memberAvatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80',
-    issueDate: getRelativeDate(-20),
-    dueDate: getRelativeDate(-6),
-    returnDate: getRelativeDate(-3), // Returned 3 days late
-    status: 'Returned',
-    overdueDays: 3,
-    fineAmount: 30,
-    fineStatus: 'Unpaid',
-    paymentDate: null,
-    paymentMethod: null,
-    receiptNumber: null,
-    remarks: 'Returned 3 days late; fine unpaid at time of drop-off'
-  },
-  {
-    id: 'LN-2026-808',
-    bookId: 'book-2',
-    bookTitle: 'Designing Data-Intensive Applications',
-    bookAuthor: 'Martin Kleppmann',
-    bookCover: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500&auto=format&fit=crop&q=80',
-    bookIsbn: '978-1449373320',
-    bookCategory: 'Computer Science',
-    memberId: 'mem-6',
-    memberName: 'Priyanka Sharma',
-    membershipId: 'RES-2025-09',
-    memberEmail: 'priyanka.sharma@research.in',
-    memberPhone: '+91 94567 89012',
-    memberAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
-    issueDate: getRelativeDate(-26),
-    dueDate: getRelativeDate(-12), // 12 days overdue
-    returnDate: null,
-    status: 'Overdue',
-    overdueDays: 12,
-    fineAmount: 120, // 12 * 10
-    fineStatus: 'Unpaid',
-    paymentDate: null,
-    paymentMethod: null,
-    receiptNumber: null,
-    remarks: 'Reminder sent; borrower requested research extension'
-  },
-  {
-    id: 'LN-2026-809',
-    bookId: 'book-8',
-    bookTitle: 'The Great Gatsby',
-    bookAuthor: 'F. Scott Fitzgerald',
-    bookCover: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500&auto=format&fit=crop&q=80',
-    bookIsbn: '978-0743273565',
-    bookCategory: 'Literature & Fiction',
-    memberId: 'mem-8',
-    memberName: 'Ananya Deshmukh',
-    membershipId: 'MEM-2025-88',
-    memberEmail: 'ananya.d@iitb.ac.in',
-    memberPhone: '+91 92567 89012',
-    memberAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80',
-    issueDate: getRelativeDate(-18),
-    dueDate: getRelativeDate(-4),
-    returnDate: getRelativeDate(-1), // Returned 3 days late
-    status: 'Returned',
-    overdueDays: 3,
-    fineAmount: 30,
-    fineStatus: 'Paid',
-    paymentDate: getRelativeDate(-1),
-    paymentMethod: 'Cash',
-    receiptNumber: 'REC-2026-7840',
-    remarks: 'Settled at front circulation desk'
+// Dynamic initial circulation loan generator from live API books and members
+export const generateDynamicLoans = () => {
+  const books = bookService.getAllBooks();
+  const members = memberService.getAllMembers();
+
+  if (!books || books.length === 0 || !members || members.length === 0) {
+    return [];
   }
-];
+
+  const b = (i) => books[i % books.length];
+  const m = (i) => members[i % members.length];
+
+  return [
+    {
+      id: 'LN-2026-801',
+      bookId: b(0).id,
+      bookTitle: b(0).title,
+      bookAuthor: b(0).author,
+      bookCover: b(0).coverImage,
+      bookIsbn: b(0).isbn,
+      bookCategory: b(0).category,
+      memberId: m(1).id,
+      memberName: m(1).name,
+      membershipId: m(1).membershipId,
+      memberEmail: m(1).email,
+      memberPhone: m(1).phone,
+      memberAvatar: m(1).avatar,
+      issueDate: getRelativeDate(-5),
+      dueDate: getRelativeDate(9),
+      returnDate: null,
+      status: 'Issued',
+      overdueDays: 0,
+      fineAmount: 0,
+      remarks: 'Standard 14-day academic circulation'
+    },
+    {
+      id: 'LN-2026-802',
+      bookId: b(1).id,
+      bookTitle: b(1).title,
+      bookAuthor: b(1).author,
+      bookCover: b(1).coverImage,
+      bookIsbn: b(1).isbn,
+      bookCategory: b(1).category,
+      memberId: m(0).id,
+      memberName: m(0).name,
+      membershipId: m(0).membershipId,
+      memberEmail: m(0).email,
+      memberPhone: m(0).phone,
+      memberAvatar: m(0).avatar,
+      issueDate: getRelativeDate(-8),
+      dueDate: getRelativeDate(6),
+      returnDate: null,
+      status: 'Issued',
+      overdueDays: 0,
+      fineAmount: 0,
+      remarks: 'Faculty research circulation'
+    },
+    {
+      id: 'LN-2026-803',
+      bookId: b(2).id,
+      bookTitle: b(2).title,
+      bookAuthor: b(2).author,
+      bookCover: b(2).coverImage,
+      bookIsbn: b(2).isbn,
+      bookCategory: b(2).category,
+      memberId: m(4).id,
+      memberName: m(4).name,
+      membershipId: m(4).membershipId,
+      memberEmail: m(4).email,
+      memberPhone: m(4).phone,
+      memberAvatar: m(4).avatar,
+      issueDate: getRelativeDate(-22),
+      dueDate: getRelativeDate(-8), // 8 days overdue
+      returnDate: null,
+      status: 'Overdue',
+      overdueDays: 8,
+      fineAmount: 80,
+      fineStatus: 'Unpaid',
+      paymentDate: null,
+      paymentMethod: null,
+      receiptNumber: null,
+      remarks: 'Automated overdue reminder dispatched to student email'
+    },
+    {
+      id: 'LN-2026-804',
+      bookId: b(3).id,
+      bookTitle: b(3).title,
+      bookAuthor: b(3).author,
+      bookCover: b(3).coverImage,
+      bookIsbn: b(3).isbn,
+      bookCategory: b(3).category,
+      memberId: m(2).id,
+      memberName: m(2).name,
+      membershipId: m(2).membershipId,
+      memberEmail: m(2).email,
+      memberPhone: m(2).phone,
+      memberAvatar: m(2).avatar,
+      issueDate: getRelativeDate(-18),
+      dueDate: getRelativeDate(-4),
+      returnDate: getRelativeDate(-5), // Returned on time
+      status: 'Returned',
+      overdueDays: 0,
+      fineAmount: 0,
+      fineStatus: 'Paid',
+      paymentDate: null,
+      paymentMethod: null,
+      receiptNumber: null,
+      remarks: 'Returned in pristine condition'
+    },
+    {
+      id: 'LN-2026-805',
+      bookId: b(4).id,
+      bookTitle: b(4).title,
+      bookAuthor: b(4).author,
+      bookCover: b(4).coverImage,
+      bookIsbn: b(4).isbn,
+      bookCategory: b(4).category,
+      memberId: m(3).id,
+      memberName: m(3).name,
+      membershipId: m(3).membershipId,
+      memberEmail: m(3).email,
+      memberPhone: m(3).phone,
+      memberAvatar: m(3).avatar,
+      issueDate: getRelativeDate(-25),
+      dueDate: getRelativeDate(-11),
+      returnDate: getRelativeDate(-6), // Returned 5 days late
+      status: 'Returned',
+      overdueDays: 5,
+      fineAmount: 50,
+      fineStatus: 'Paid',
+      paymentDate: getRelativeDate(-6),
+      paymentMethod: 'UPI',
+      receiptNumber: 'REC-2026-5120',
+      remarks: 'Late return fine ₹50 collected via UPI'
+    },
+    {
+      id: 'LN-2026-806',
+      bookId: b(5).id,
+      bookTitle: b(5).title,
+      bookAuthor: b(5).author,
+      bookCover: b(5).coverImage,
+      bookIsbn: b(5).isbn,
+      bookCategory: b(5).category,
+      memberId: m(0).id,
+      memberName: m(0).name,
+      membershipId: m(0).membershipId,
+      memberEmail: m(0).email,
+      memberPhone: m(0).phone,
+      memberAvatar: m(0).avatar,
+      issueDate: getRelativeDate(-20),
+      dueDate: getRelativeDate(-6),
+      returnDate: getRelativeDate(-3), // Returned 3 days late
+      status: 'Returned',
+      overdueDays: 3,
+      fineAmount: 30,
+      fineStatus: 'Unpaid',
+      paymentDate: null,
+      paymentMethod: null,
+      receiptNumber: null,
+      remarks: 'Returned 3 days late; fine unpaid at drop-off'
+    }
+  ];
+};
 
 export const loanService = {
+  // Synchronize loan records with current API books and API members
+  syncLoansWithApiData(loans) {
+    const books = bookService.getAllBooks();
+    const members = memberService.getAllMembers();
+
+    if (!books || books.length === 0 || !members || members.length === 0) {
+      return loans;
+    }
+
+    let hasChanges = false;
+    const synced = loans.map((loan, idx) => {
+      let book = books.find((b) => String(b.id) === String(loan.bookId));
+      if (!book) {
+        book = books[idx % books.length];
+      }
+
+      let member = members.find((m) => String(m.id) === String(loan.memberId));
+      if (!member) {
+        member = members[idx % members.length];
+      }
+
+      const updated = {
+        ...loan,
+        bookId: book.id,
+        bookTitle: book.title,
+        bookAuthor: book.author,
+        bookCover: book.coverImage,
+        bookIsbn: book.isbn,
+        bookCategory: book.category,
+        memberId: member.id,
+        memberName: member.name,
+        membershipId: member.membershipId,
+        memberEmail: member.email,
+        memberPhone: member.phone,
+        memberAvatar: member.avatar
+      };
+
+      if (
+        loan.bookId !== updated.bookId ||
+        loan.bookTitle !== updated.bookTitle ||
+        loan.memberId !== updated.memberId ||
+        loan.memberName !== updated.memberName ||
+        loan.bookCover !== updated.bookCover ||
+        loan.memberAvatar !== updated.memberAvatar
+      ) {
+        hasChanges = true;
+      }
+      return updated;
+    });
+
+    if (hasChanges) {
+      this.saveLoans(synced);
+    }
+    return synced;
+  },
+
   // Initialize loan transactions store
   initLoans() {
     try {
       const stored = localStorage.getItem(LOANS_STORAGE_KEY);
-      if (!stored) {
-        localStorage.setItem(LOANS_STORAGE_KEY, JSON.stringify(INITIAL_LOANS));
-        return INITIAL_LOANS;
+      let loans = stored ? JSON.parse(stored) : [];
+
+      // Check if loans are empty or have any legacy mock books/members
+      const hasLegacyMock = loans.some(
+        (l) => l.bookTitle?.includes('Clean Architecture') || l.memberName === 'Alex Rivera'
+      );
+
+      if (loans.length === 0 || hasLegacyMock) {
+        loans = generateDynamicLoans();
+        if (loans.length > 0) {
+          this.saveLoans(loans);
+        }
       }
-      const parsed = JSON.parse(stored);
-      // Dynamically re-evaluate overdue status on load
-      return this.evaluateOverdueLoans(parsed);
+
+      loans = this.syncLoansWithApiData(loans);
+      return this.evaluateOverdueLoans(loans);
     } catch {
-      return INITIAL_LOANS;
+      return generateDynamicLoans();
     }
   },
 

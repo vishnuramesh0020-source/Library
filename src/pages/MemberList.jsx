@@ -16,7 +16,9 @@ import {
   Mail,
   MapPin,
   Calendar,
-  IdCard
+  IdCard,
+  CloudDownload,
+  AlertCircle
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { memberService } from '../services/memberService';
@@ -26,6 +28,8 @@ import MemberDeleteModal from '../components/members/MemberDeleteModal';
 
 export default function MemberList() {
   const [members, setMembers] = useState(() => memberService.getAllMembers());
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Search & Filter & Sort state
   const [searchTerm, setSearchTerm] = useState('');
@@ -135,6 +139,45 @@ export default function MemberList() {
     }
   };
 
+  // Fetch members from Third-Party API on initial mount if empty or non-API
+  useEffect(() => {
+    const loadMembers = async () => {
+      if (members.length === 0 || !members.every((m) => m.apiId !== undefined)) {
+        setLoading(true);
+        setError(null);
+        const res = await memberService.fetchMembersFromApi(20);
+        if (res.success && res.members) {
+          setMembers(res.members);
+        } else if (!res.success) {
+          setError(res.message);
+        }
+        setLoading(false);
+      }
+    };
+    loadMembers();
+  }, []);
+
+  // Third-Party API Sync via Axios
+  const handleSyncThirdParty = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await memberService.fetchMembersFromApi(25, true);
+      if (res.success && res.members) {
+        setMembers(res.members);
+        toast.success(`Loaded ${res.members.length} members from API! (${res.source})`);
+      } else {
+        setError(res.message || 'Failed to fetch from third-party API.');
+        toast.error('Third-Party API synchronization failed.');
+      }
+    } catch (err) {
+      setError(err.message || 'Network error communicating with Third-Party API.');
+      toast.error('Network error during API fetch.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Reset Filters
   const handleResetFilters = () => {
     setSearchTerm('');
@@ -153,6 +196,10 @@ export default function MemberList() {
             <span className="text-xs font-semibold text-slate-500">
               Enrolled Directory: {members.length} members
             </span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              API-Powered (DummyJSON Users)
+            </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
             Member Management & Directory
@@ -162,8 +209,18 @@ export default function MemberList() {
           </p>
         </div>
 
-        {/* Action Button */}
+        {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleSyncThirdParty}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs hover:border-slate-300 transition-all cursor-pointer disabled:opacity-60"
+            title="Fetch from Third-Party REST API (DummyJSON Users)"
+          >
+            <CloudDownload className={`w-4 h-4 text-indigo-600 ${loading ? 'animate-bounce' : ''}`} />
+            <span>{loading ? 'Syncing API...' : 'Sync Third-Party API'}</span>
+          </button>
+
           <button
             onClick={handleOpenAdd}
             className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all cursor-pointer"
@@ -173,6 +230,22 @@ export default function MemberList() {
           </button>
         </div>
       </div>
+
+      {/* Error Banner with Retry */}
+      {error && (
+        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 flex items-center justify-between gap-3 text-xs sm:text-sm animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+            <span><strong>Third-Party Members API Notice:</strong> {error}</span>
+          </div>
+          <button
+            onClick={handleSyncThirdParty}
+            className="px-3 py-1 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors cursor-pointer shrink-0"
+          >
+            Retry Fetch
+          </button>
+        </div>
+      )}
 
       {/* Search & Filter Toolbar */}
       <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">

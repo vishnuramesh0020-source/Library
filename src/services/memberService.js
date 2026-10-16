@@ -1,168 +1,153 @@
+import axios from 'axios';
 import { dashboardService } from './dashboardService';
 
 const MEMBERS_STORAGE_KEY = 'lms_members_store';
+const PRIMARY_USERS_API = 'https://dummyjson.com/users';
+const FALLBACK_USERS_API = 'https://jsonplaceholder.typicode.com/users';
 
-export const INITIAL_MEMBERS = [
-  {
-    id: 'mem-1',
-    name: 'Sarah Jenkins',
-    email: 'librarian@library.com',
-    phone: '+91 98765 43210',
-    address: '42 Academic Ridge, University Campus, New Delhi 110025',
-    membershipId: 'LIB-2025-01',
+// Transform DummyJSON user to Member model
+const transformUserToMember = (user, index) => {
+  const roles = ['Student Member', 'Faculty Scholar', 'Research Fellow', 'Alumni Member'];
+  const role = user.company?.title || roles[index % roles.length];
+  const fullAddress = user.address
+    ? `${user.address.address}, ${user.address.city}, ${user.address.state} ${user.address.postalCode}`
+    : '42 University Boulevard, Campus Enclave, New Delhi 110025';
+
+  return {
+    id: `mem-${user.id}`,
+    apiId: user.id,
+    name: `${user.firstName} ${user.lastName}`,
+    email: user.email,
+    phone: user.phone || `+91 ${9810000000 + user.id * 12345}`,
+    address: fullAddress,
+    membershipId: `MEM-2025-${String(user.id).padStart(3, '0')}`,
+    membershipDate: user.birthDate || '2024-03-15',
+    status: 'Active',
+    role,
+    avatar: user.image || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.firstName + ' ' + user.lastName)}`,
+    borrowedCount: 0
+  };
+};
+
+// Transform JSONPlaceholder user fallback to Member model
+const transformJpUserToMember = (user, index) => {
+  const roles = ['Student Member', 'Faculty Scholar', 'Research Fellow', 'Alumni Member'];
+  const address = user.address
+    ? `${user.address.street}, ${user.address.suite}, ${user.address.city} ${user.address.zipcode}`
+    : '104 Academic Enclave, North Campus, Mumbai 400012';
+
+  return {
+    id: `mem-${user.id}`,
+    apiId: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    address,
+    membershipId: `MEM-2025-${String(user.id).padStart(3, '0')}`,
     membershipDate: '2024-03-15',
     status: 'Active',
-    role: 'Librarian Staff',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
-    borrowedCount: 2
-  },
-  {
-    id: 'mem-2',
-    name: 'Alex Rivera',
-    email: 'student@library.com',
-    phone: '+91 98123 45678',
-    address: '15 West End Hall, North Campus Road, Mumbai 400012',
-    membershipId: 'MEM-2025-42',
-    membershipDate: '2024-08-20',
-    status: 'Active',
-    role: 'Student Member',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
-    borrowedCount: 1
-  },
-  {
-    id: 'mem-3',
-    name: 'Dr. Arthur Pendelton',
-    email: 'arthur.p@university.edu',
-    phone: '+91 97234 56789',
-    address: '88 Faculty Enclave, Science Block, Bengaluru 560012',
-    membershipId: 'FAC-2024-18',
-    membershipDate: '2024-01-10',
-    status: 'Active',
-    role: 'Faculty Scholar',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
-    borrowedCount: 3
-  },
-  {
-    id: 'mem-4',
-    name: 'Elena Rostova',
-    email: 'elena.rostova@academics.org',
-    phone: '+91 96345 67890',
-    address: '104 Lotus Heights, Sector 62, Noida 201301',
-    membershipId: 'MEM-2025-104',
-    membershipDate: '2024-05-18',
-    status: 'Active',
-    role: 'Student Member',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+    role: roles[index % roles.length],
+    avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`,
     borrowedCount: 0
-  },
-  {
-    id: 'mem-5',
-    name: 'Marcus Vance',
-    email: 'marcus.v@polytechnic.edu',
-    phone: '+91 95456 78901',
-    address: '77 Residency Circle, Civil Lines, Jaipur 302006',
-    membershipId: 'MEM-2025-77',
-    membershipDate: '2024-09-02',
-    status: 'Suspended',
-    role: 'Student Member',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
-    borrowedCount: 2
-  },
-  {
-    id: 'mem-6',
-    name: 'Priyanka Sharma',
-    email: 'priyanka.sharma@research.in',
-    phone: '+91 94567 89012',
-    address: '12 Cyber City Road, DLF Phase 2, Gurugram 122002',
-    membershipId: 'RES-2025-09',
-    membershipDate: '2024-02-14',
-    status: 'Active',
-    role: 'Research Fellow',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
-    borrowedCount: 4
-  },
-  {
-    id: 'mem-7',
-    name: 'David Chen',
-    email: 'david.chen@mit.edu',
-    phone: '+91 93678 90123',
-    address: '50 Park Avenue, Jubilee Hills, Hyderabad 500033',
-    membershipId: 'MEM-2025-50',
-    membershipDate: '2024-07-11',
-    status: 'Active',
-    role: 'Student Member',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80',
-    borrowedCount: 1
-  },
-  {
-    id: 'mem-8',
-    name: 'Ananya Deshmukh',
-    email: 'ananya.d@iitb.ac.in',
-    phone: '+91 92789 01234',
-    address: '23 Powai Lake Road, Central Avenue, Mumbai 400076',
-    membershipId: 'FAC-2025-23',
-    membershipDate: '2024-06-30',
-    status: 'Active',
-    role: 'Faculty Scholar',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80',
-    borrowedCount: 0
-  },
-  {
-    id: 'mem-9',
-    name: 'Rohan Mehta',
-    email: 'rohan.mehta@alumni.org',
-    phone: '+91 91890 12345',
-    address: '14 Bapu Nagar, Ashram Road, Ahmedabad 380009',
-    membershipId: 'MEM-2024-88',
-    membershipDate: '2024-04-05',
-    status: 'Active',
-    role: 'Alumni Member',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200&auto=format&fit=crop&q=80',
-    borrowedCount: 1
-  },
-  {
-    id: 'mem-10',
-    name: 'Kavita Nair',
-    email: 'kavita.nair@litstudies.ac.in',
-    phone: '+91 90901 23456',
-    address: '6 Palm Beach Road, Marine Drive, Kochi 682011',
-    membershipId: 'MEM-2025-108',
-    membershipDate: '2024-10-01',
-    status: 'Active',
-    role: 'Student Member',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80',
-    borrowedCount: 0
-  }
-];
+  };
+};
 
 export const memberService = {
-  initMembers() {
-    try {
-      const stored = localStorage.getItem(MEMBERS_STORAGE_KEY);
-      if (!stored) {
-        localStorage.setItem(MEMBERS_STORAGE_KEY, JSON.stringify(INITIAL_MEMBERS));
-        return INITIAL_MEMBERS;
-      }
-      return JSON.parse(stored);
-    } catch {
-      return INITIAL_MEMBERS;
-    }
-  },
-
-  getAllMembers() {
-    return this.initMembers();
-  },
-
-  getMemberById(id) {
-    const members = this.getAllMembers();
-    return members.find((m) => String(m.id) === String(id) || String(m.membershipId) === String(id)) || null;
-  },
-
+  // Save members to localStorage
   saveMembers(members) {
     try {
       localStorage.setItem(MEMBERS_STORAGE_KEY, JSON.stringify(members));
     } catch (e) {
       console.error('Error saving members to localStorage', e);
+    }
+  },
+
+  // Get currently loaded members from local cache with dynamic active loans count
+  getAllMembers() {
+    try {
+      const stored = localStorage.getItem(MEMBERS_STORAGE_KEY);
+      if (stored) {
+        const members = JSON.parse(stored);
+        let activeLoansMap = {};
+        try {
+          const storedLoans = localStorage.getItem('lms_loans_store');
+          if (storedLoans) {
+            const loans = JSON.parse(storedLoans);
+            loans.forEach((l) => {
+              if (l.status !== 'Returned') {
+                activeLoansMap[l.memberId] = (activeLoansMap[l.memberId] || 0) + 1;
+              }
+            });
+          }
+        } catch {
+          // fallback
+        }
+
+        return members.map((m) => ({
+          ...m,
+          borrowedCount: activeLoansMap[m.id] !== undefined ? activeLoansMap[m.id] : (m.borrowedCount || 0)
+        }));
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  },
+
+  getMemberById(id) {
+    const members = this.getAllMembers();
+    return (
+      members.find(
+        (m) => String(m.id) === String(id) || String(m.membershipId) === String(id)
+      ) || null
+    );
+  },
+
+  // Fetch members from Third-Party REST API (API-First Architecture)
+  async fetchMembersFromApi(limit = 20, force = false) {
+    const existing = this.getAllMembers();
+    const hasValidApiMembers = existing && existing.length > 0 && existing.every((m) => m.apiId !== undefined);
+    if (!force && hasValidApiMembers) {
+      return { success: true, members: existing, source: 'cache' };
+    }
+
+    try {
+      // Primary Third-Party API Call (DummyJSON Users)
+      const res = await axios.get(`${PRIMARY_USERS_API}?limit=${limit}&select=firstName,lastName,email,phone,address,image,birthDate,company`, {
+        timeout: 8000
+      });
+
+      const users = res.data.users || [];
+      const transformed = users.map(transformUserToMember);
+
+      this.saveMembers(transformed);
+      return { success: true, members: transformed, source: 'api (DummyJSON Users)' };
+    } catch (primaryErr) {
+      console.warn('Primary users API fetch failed, trying fallback API:', primaryErr.message);
+
+      try {
+        // Fallback Third-Party API Call (JSONPlaceholder Users)
+        const resFallback = await axios.get(`${FALLBACK_USERS_API}?_limit=${limit}`, {
+          timeout: 6000
+        });
+
+        const users = resFallback.data || [];
+        const transformedFallback = users.map(transformJpUserToMember);
+
+        this.saveMembers(transformedFallback);
+        return { success: true, members: transformedFallback, source: 'api (JSONPlaceholder Users)' };
+      } catch (fallbackErr) {
+        console.error('All member APIs failed:', fallbackErr);
+
+        if (existing && existing.length > 0) {
+          return { success: true, members: existing, source: 'cache (offline)' };
+        }
+
+        return {
+          success: false,
+          message: primaryErr.response?.data?.message || primaryErr.message || 'Third-Party Members API network error'
+        };
+      }
     }
   },
 
@@ -175,18 +160,23 @@ export const memberService = {
   isMembershipIdUnique(membershipId, excludeId = null) {
     const members = this.getAllMembers();
     return !members.some(
-      (m) => m.membershipId.toLowerCase().trim() === membershipId.toLowerCase().trim() && String(m.id) !== String(excludeId)
+      (m) =>
+        m.membershipId.toLowerCase().trim() === membershipId.toLowerCase().trim() &&
+        String(m.id) !== String(excludeId)
     );
   },
 
   isEmailUnique(email, excludeId = null) {
     const members = this.getAllMembers();
     return !members.some(
-      (m) => m.email.toLowerCase().trim() === email.toLowerCase().trim() && String(m.id) !== String(excludeId)
+      (m) =>
+        m.email.toLowerCase().trim() === email.toLowerCase().trim() &&
+        String(m.id) !== String(excludeId)
     );
   },
 
-  addMember(data) {
+  // Add Member via API POST
+  async addMember(data) {
     const members = this.getAllMembers();
 
     // Check unique membership ID
@@ -215,6 +205,18 @@ export const memberService = {
       borrowedCount: 0
     };
 
+    // Third-party API POST request
+    try {
+      await axios.post(`${PRIMARY_USERS_API}/add`, {
+        firstName: newMember.name.split(' ')[0],
+        lastName: newMember.name.split(' ').slice(1).join(' ') || 'Member',
+        email: newMember.email,
+        phone: newMember.phone
+      });
+    } catch (err) {
+      console.warn('API POST simulation note:', err.message);
+    }
+
     members.unshift(newMember);
     this.saveMembers(members);
 
@@ -241,7 +243,8 @@ export const memberService = {
     return { success: true, member: newMember, message: `Member ${newMember.name} successfully registered!` };
   },
 
-  updateMember(id, data) {
+  // Update Member via API PUT
+  async updateMember(id, data) {
     const members = this.getAllMembers();
     const index = members.findIndex((m) => String(m.id) === String(id));
 
@@ -249,12 +252,10 @@ export const memberService = {
       return { success: false, message: 'Member record not found.' };
     }
 
-    // Check unique membership ID
     if (data.membershipId && !this.isMembershipIdUnique(data.membershipId, id)) {
       return { success: false, message: `Membership ID "${data.membershipId}" is already taken by another member.` };
     }
 
-    // Check unique email
     if (data.email && !this.isEmailUnique(data.email, id)) {
       return { success: false, message: `Email address "${data.email}" is already in use by another member.` };
     }
@@ -273,18 +274,39 @@ export const memberService = {
       avatar: data.avatar && data.avatar.trim() !== '' ? data.avatar.trim() : current.avatar
     };
 
+    // Third-party API PUT request
+    try {
+      const numericId = String(id).replace('mem-', '');
+      await axios.put(`${PRIMARY_USERS_API}/${numericId || 1}`, {
+        firstName: updatedMember.name,
+        email: updatedMember.email,
+        phone: updatedMember.phone
+      });
+    } catch (err) {
+      console.warn('API PUT simulation note:', err.message);
+    }
+
     members[index] = updatedMember;
     this.saveMembers(members);
 
     return { success: true, member: updatedMember, message: `Member profile for ${updatedMember.name} updated.` };
   },
 
-  deleteMember(id) {
+  // Delete Member via API DELETE
+  async deleteMember(id) {
     const members = this.getAllMembers();
     const target = members.find((m) => String(m.id) === String(id));
 
     if (!target) {
       return { success: false, message: 'Member record not found.' };
+    }
+
+    // Third-party API DELETE request
+    try {
+      const numericId = String(id).replace('mem-', '');
+      await axios.delete(`${PRIMARY_USERS_API}/${numericId || 1}`);
+    } catch (err) {
+      console.warn('API DELETE simulation note:', err.message);
     }
 
     const remaining = members.filter((m) => String(m.id) !== String(id));

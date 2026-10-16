@@ -27,6 +27,7 @@ export default function MemberProfile() {
   const navigate = useNavigate();
 
   const [member, setMember] = useState(() => memberService.getMemberById(id));
+  const [loading, setLoading] = useState(false);
   const [memberLoans, setMemberLoans] = useState(() => {
     const m = memberService.getMemberById(id);
     return m ? loanService.getActiveLoansByMember(m.id) : [];
@@ -39,11 +40,20 @@ export default function MemberProfile() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const found = memberService.getMemberById(id);
-    setMember(found);
-    if (found) {
-      setMemberLoans(loanService.getActiveLoansByMember(found.id));
-    }
+    const loadMember = async () => {
+      let found = memberService.getMemberById(id);
+      if (!found) {
+        setLoading(true);
+        await memberService.fetchMembersFromApi(20);
+        found = memberService.getMemberById(id);
+        setLoading(false);
+      }
+      setMember(found);
+      if (found) {
+        setMemberLoans(loanService.getActiveLoansByMember(found.id));
+      }
+    };
+    loadMember();
   }, [id]);
 
   const refreshMemberData = () => {
@@ -53,6 +63,15 @@ export default function MemberProfile() {
       setMemberLoans(loanService.getActiveLoansByMember(found.id));
     }
   };
+
+  if (loading) {
+    return (
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-24 text-center space-y-4">
+        <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-600 border-t-transparent"></div>
+        <p className="text-sm font-semibold text-slate-600">Retrieving member record from registry API...</p>
+      </div>
+    );
+  }
 
   if (!member) {
     return (

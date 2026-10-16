@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   BookOpen,
@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { dashboardService } from '../services/dashboardService';
+import { bookService } from '../services/bookService';
+import { memberService } from '../services/memberService';
 import IssueModal from '../components/loans/IssueModal';
 import AddBookModal from '../components/dashboard/AddBookModal';
 import CollectFineModal from '../components/dashboard/CollectFineModal';
@@ -47,6 +49,27 @@ export default function Dashboard() {
     setActivities(dashboardService.getActivities());
     setCategories(dashboardService.getCategories());
   };
+
+  // Ensure API data is ready and dashboard metrics are synchronized on mount
+  useEffect(() => {
+    const init = async () => {
+      let needsRefresh = false;
+      const books = bookService.getAllBooks();
+      if (!books || books.length === 0 || !books.every((b) => b.apiId && String(b.apiId).includes('/works/'))) {
+        await bookService.fetchBooksFromApi(25);
+        needsRefresh = true;
+      }
+      const members = memberService.getAllMembers();
+      if (!members || members.length === 0 || !members.every((m) => m.apiId !== undefined)) {
+        await memberService.fetchMembersFromApi(20);
+        needsRefresh = true;
+      }
+      if (needsRefresh) {
+        refreshDashboard();
+      }
+    };
+    init();
+  }, []);
 
   // Filter activities
   const filteredActivities = activities.filter((act) => {
@@ -112,11 +135,12 @@ export default function Dashboard() {
     {
       title: 'Total Categories',
       value: stats.totalCategories,
-      sub: 'Academic genres',
+      sub: 'Manage taxonomy →',
       icon: Layers,
       iconColor: 'text-amber-600',
       bgColor: 'bg-amber-50/80',
-      borderColor: 'border-amber-100'
+      borderColor: 'border-amber-100',
+      link: '/categories'
     },
     {
       title: 'Fine Collected',
@@ -488,18 +512,30 @@ export default function Dashboard() {
                   {stats.totalCategories} active catalog classifications
                 </p>
               </div>
-              <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
-                {stats.totalBooks} titles
-              </span>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/categories"
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline"
+                >
+                  Manage All →
+                </Link>
+              </div>
             </div>
 
             <div className="space-y-3 mt-4">
               {categories.map((cat, idx) => {
                 const percentage = Math.round((cat.count / stats.totalBooks) * 100);
                 return (
-                  <div key={idx} className="space-y-1">
+                  <div
+                    key={idx}
+                    onClick={() => navigate(`/books?category=${encodeURIComponent(cat.name)}`)}
+                    className="space-y-1 p-1 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
+                    title={`Browse books in ${cat.name}`}
+                  >
                     <div className="flex justify-between text-xs font-medium">
-                      <span className="text-slate-700">{cat.name}</span>
+                      <span className="text-slate-700 hover:text-indigo-600 font-semibold transition-colors">
+                        {cat.name}
+                      </span>
                       <span className="text-slate-500 font-mono">
                         {cat.count.toLocaleString()} books ({percentage}%)
                       </span>

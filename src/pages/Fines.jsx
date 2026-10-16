@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { fineService } from '../services/fineService';
+import { bookService } from '../services/bookService';
+import { memberService } from '../services/memberService';
 import PayFineModal from '../components/fines/PayFineModal';
 import FineReceiptModal from '../components/fines/FineReceiptModal';
 import FineCalculatorModal from '../components/fines/FineCalculatorModal';
@@ -46,6 +48,29 @@ export default function Fines() {
   const [allFines, setAllFines] = useState(() => fineService.getAllFines());
   const [overdueBooks, setOverdueBooks] = useState(() => fineService.getOverdueBooks());
   const [stats, setStats] = useState(() => fineService.getFineStats());
+
+  // Ensure API books and members are loaded on mount and sync fine records
+  useEffect(() => {
+    const initFines = async () => {
+      let needsRefresh = false;
+      const books = bookService.getAllBooks();
+      if (!books || books.length === 0 || !books.every((b) => b.apiId && String(b.apiId).includes('/works/'))) {
+        await bookService.fetchBooksFromApi(25);
+        needsRefresh = true;
+      }
+      const members = memberService.getAllMembers();
+      if (!members || members.length === 0 || !members.every((m) => m.apiId !== undefined)) {
+        await memberService.fetchMembersFromApi(20);
+        needsRefresh = true;
+      }
+      if (needsRefresh) {
+        setAllFines(fineService.getAllFines());
+        setOverdueBooks(fineService.getOverdueBooks());
+        setStats(fineService.getFineStats());
+      }
+    };
+    initFines();
+  }, []);
 
   // Modals state
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);

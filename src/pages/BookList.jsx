@@ -1,8 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Plus,
-  Search,
   RotateCcw,
   CloudDownload,
   AlertCircle,
@@ -13,7 +12,8 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  BookX
+  BookX,
+  Layers
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { bookService } from '../services/bookService';
@@ -22,13 +22,15 @@ import BookModal from '../components/books/BookModal';
 import DeleteConfirmModal from '../components/books/DeleteConfirmModal';
 
 export default function BookList() {
+  const [searchParams] = useSearchParams();
   const [books, setBooks] = useState(() => bookService.getAllBooks());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Search & Filter & Sort state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') || '');
+  const [searchScope, setSearchScope] = useState(() => searchParams.get('scope') || 'all'); // 'all' | 'title' | 'author' | 'isbn'
+  const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get('category') || 'All');
   const [selectedAuthor, setSelectedAuthor] = useState('All');
   const [sortBy, setSortBy] = useState('title_asc');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
@@ -51,25 +53,68 @@ export default function BookList() {
     return ['All', ...list.sort()];
   }, [books]);
 
+  // Category counts dictionary
+  const categoryCounts = useMemo(() => {
+    const map = { All: books.length };
+    books.forEach((b) => {
+      if (b.category) {
+        map[b.category] = (map[b.category] || 0) + 1;
+      }
+    });
+    return map;
+  }, [books]);
+
   const authors = useMemo(() => {
     const list = Array.from(new Set(books.map((b) => b.author))).filter(Boolean);
     return ['All', ...list.sort()];
   }, [books]);
 
+  // Sync searchParams with internal state
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (cat) setSelectedCategory(cat);
+    const q = searchParams.get('search');
+    if (q) setSearchTerm(q);
+    const scope = searchParams.get('scope');
+    if (scope && ['all', 'title', 'author', 'isbn'].includes(scope)) setSearchScope(scope);
+  }, [searchParams]);
+
   // Filter & Sort logic
   const filteredBooks = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    const cleanIsbnQuery = term.replace(/[^0-9xX]/g, '');
+
     return books
       .filter((book) => {
-        // Search filter (Title, Author, ISBN)
-        const matchSearch =
-          !searchTerm.trim() ||
-          book.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-          book.author.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-          (book.isbn && book.isbn.toLowerCase().includes(searchTerm.toLowerCase().trim()));
+        let matchSearch = true;
+        if (term) {
+          const titleMatch = book.title?.toLowerCase().includes(term);
+          const authorMatch = book.author?.toLowerCase().includes(term);
+          const cleanBookIsbn = (book.isbn || '').replace(/[^0-9xX]/g, '').toLowerCase();
+          const isbnMatch =
+            (book.isbn && book.isbn.toLowerCase().includes(term)) ||
+            (cleanIsbnQuery.length > 2 && cleanBookIsbn.includes(cleanIsbnQuery));
 
-        // Category filter
+          if (searchScope === 'title') {
+            matchSearch = titleMatch;
+          } else if (searchScope === 'author') {
+            matchSearch = authorMatch;
+          } else if (searchScope === 'isbn') {
+            matchSearch = isbnMatch;
+          } else {
+            // 'all'
+            matchSearch =
+              titleMatch ||
+              authorMatch ||
+              isbnMatch ||
+              (book.category && book.category.toLowerCase().includes(term));
+          }
+        }
+
+        // Category filter (case-insensitive)
         const matchCategory =
-          selectedCategory === 'All' || book.category === selectedCategory;
+          selectedCategory === 'All' ||
+          (book.category && book.category.toLowerCase() === selectedCategory.toLowerCase());
 
         // Author filter
         const matchAuthor =
@@ -95,12 +140,12 @@ export default function BookList() {
         }
         return 0;
       });
-  }, [books, searchTerm, selectedCategory, selectedAuthor, sortBy]);
+  }, [books, searchTerm, searchScope, selectedCategory, selectedAuthor, sortBy]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedCategory, selectedAuthor, sortBy]);
+  }, [searchTerm, searchScope, selectedCategory, selectedAuthor, sortBy]);
 
   // Paginated books slice
   const totalPages = Math.ceil(filteredBooks.length / pageSize) || 1;
@@ -109,25 +154,33 @@ export default function BookList() {
     return filteredBooks.slice(start, start + pageSize);
   }, [filteredBooks, currentPage, pageSize]);
 
+  // Fetch books from Open Library Books API on initial mount if empty or non-API
+  useEffect(() => {
+    const loadBooks = async () => {
+      if (books.length === 0 || !books.every((b) => b.apiId && String(b.apiId).includes('/works/'))) {
+        setLoading(true);
+        setError(null);
+        const res = await bookService.fetchBooksFromApi(25);
+        if (res.success && res.books) {
+          setBooks(res.books);
+        } else if (!res.success) {
+          setError(res.message);
+        }
+        setLoading(false);
+      }
+    };
+    loadBooks();
+  }, []);
+
   // Third-Party API Sync via Axios
   const handleSyncThirdParty = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await bookService.fetchThirdPartyBooks(6);
+      const res = await bookService.fetchBooksFromApi(25, true);
       if (res.success && res.books) {
-        // Merge without duplicating existing IDs
-        const existingIds = new Set(books.map((b) => b.id));
-        const newItems = res.books.filter((b) => !existingIds.has(b.id));
-
-        if (newItems.length > 0) {
-          const updated = [...newItems, ...books];
-          setBooks(updated);
-          bookService.saveBooks(updated);
-          toast.success(`Imported ${newItems.length} books from Third-Party API (DummyJSON)!`);
-        } else {
-          toast.info('Catalog already in sync with Third-Party API.');
-        }
+        setBooks(res.books);
+        toast.success(`Loaded ${res.books.length} books from Third-Party API! (${res.source})`);
       } else {
         setError(res.message || 'Failed to fetch from third-party API.');
         toast.error('Third-Party API synchronization failed.');
@@ -199,6 +252,10 @@ export default function BookList() {
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-slate-500">Total Catalog: {books.length} titles</span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              API-Powered (Open Library Books API)
+            </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
             Library Catalog & Inventory
@@ -214,10 +271,10 @@ export default function BookList() {
             onClick={handleSyncThirdParty}
             disabled={loading}
             className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs hover:border-slate-300 transition-all cursor-pointer disabled:opacity-60"
-            title="Fetch from Third-Party REST API (DummyJSON)"
+            title="Fetch from Open Library Books API"
           >
             <CloudDownload className={`w-4 h-4 text-indigo-600 ${loading ? 'animate-bounce' : ''}`} />
-            <span>{loading ? 'Syncing API...' : 'Sync Third-Party API'}</span>
+            <span>{loading ? 'Syncing API...' : 'Sync Books API'}</span>
           </button>
 
           <button
@@ -250,26 +307,45 @@ export default function BookList() {
       <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
           
-          {/* Search Bar (5 cols) */}
-          <div className="lg:col-span-5 relative rounded-xl shadow-2xs">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <Search className="w-4 h-4" />
+          {/* Search Bar with Scope Selector (Title, Author, ISBN) (5 cols) */}
+          <div className="lg:col-span-5 flex rounded-xl border border-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 bg-white overflow-hidden shadow-2xs">
+            <select
+              value={searchScope}
+              onChange={(e) => setSearchScope(e.target.value)}
+              className="bg-slate-50 border-r border-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-2 outline-hidden cursor-pointer shrink-0"
+              title="Search Field Scope"
+            >
+              <option value="all">All Fields</option>
+              <option value="title">Book Title</option>
+              <option value="author">Author</option>
+              <option value="isbn">ISBN Code</option>
+            </select>
+            <div className="relative flex-1 flex items-center">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={
+                  searchScope === 'title'
+                    ? 'Search by book title...'
+                    : searchScope === 'author'
+                    ? 'Search by author name...'
+                    : searchScope === 'isbn'
+                    ? 'Search by ISBN code...'
+                    : 'Search by title, author, or ISBN...'
+                }
+                className="w-full pl-3 pr-8 py-2 text-xs sm:text-sm outline-hidden bg-transparent font-medium text-slate-800"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
             </div>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by title, author name, or ISBN..."
-              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-hidden transition-all bg-white"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 text-xs font-bold"
-              >
-                ✕
-              </button>
-            )}
           </div>
 
           {/* Category Filter (3 cols) */}
@@ -282,7 +358,7 @@ export default function BookList() {
               >
                 {categories.map((cat, i) => (
                   <option key={i} value={cat}>
-                    {cat === 'All' ? '📂 All Categories' : `• ${cat}`}
+                    {cat === 'All' ? `📂 All Categories (${books.length})` : `• ${cat} (${categoryCounts[cat] || 0})`}
                   </option>
                 ))}
               </select>
@@ -323,6 +399,44 @@ export default function BookList() {
             </div>
           </div>
 
+        </div>
+
+        {/* Interactive Category Filter Pills Bar */}
+        <div className="pt-2.5 border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+            <Layers className="w-3.5 h-3.5 text-indigo-500" /> Categories:
+          </span>
+          {categories.map((cat) => {
+            const isSelected = selectedCategory.toLowerCase() === cat.toLowerCase();
+            const count = categoryCounts[cat] || 0;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-indigo-600 text-white shadow-2xs'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 hover:text-slate-900'
+                }`}
+              >
+                <span>{cat}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                    isSelected ? 'bg-indigo-500/60 text-white' : 'bg-white text-slate-500'
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+          <Link
+            to="/categories"
+            className="ml-auto text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline shrink-0 flex items-center gap-1 pl-2"
+          >
+            <span>Manage Categories →</span>
+          </Link>
         </div>
 
         {/* Toolbar Sub-bar: Active Filter pills & View Toggle */}
